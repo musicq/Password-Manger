@@ -26,6 +26,8 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final hasHistory = history.length != 0;
+
     return Center(
       child: Padding(
         padding: EdgeInsets.only(top: 50),
@@ -82,25 +84,30 @@ class _HomeState extends State<Home> {
                       ),
                     ),
                     Expanded(
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(8),
-                        itemCount: history.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          final content = history[index];
+                      child: hasHistory
+                          ? ListView.builder(
+                              padding: const EdgeInsets.all(8),
+                              itemCount: history.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                final content = history[index];
 
-                          return ListTile(
-                            key: Key(content),
-                            title: Text(content),
-                            onTap: () => onTapTile(content, index),
-                            trailing: selectedIdx != index
-                                ? null
-                                : Text(
-                                    'Copied',
-                                    style: TextStyle(color: Colors.green),
-                                  ),
-                          );
-                        },
-                      ),
+                                return ListTile(
+                                  key: Key(content),
+                                  title: Text(content),
+                                  onTap: () => onTapTile(content, index),
+                                  trailing: selectedIdx != index
+                                      ? null
+                                      : Text(
+                                          'Copied',
+                                          style: TextStyle(color: Colors.green),
+                                        ),
+                                );
+                              },
+                            )
+                          : Text(
+                              "History is empty...",
+                              style: TextStyle(color: Colors.grey),
+                            ),
                     ),
                   ],
                 ),
@@ -108,14 +115,17 @@ class _HomeState extends State<Home> {
             ),
             Padding(
               padding: EdgeInsets.only(bottom: 40, top: 20),
-              child: MaterialButton(
-                padding: EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-                child: Text(
-                  'Clear History',
-                  style: TextStyle(color: Colors.red),
-                ),
-                onPressed: onClearHistory,
-              ),
+              child: hasHistory
+                  ? MaterialButton(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+                      child: Text(
+                        'Clear History',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      onPressed: onClearHistory,
+                    )
+                  : null,
             )
           ],
         ),
@@ -164,8 +174,32 @@ class _HomeState extends State<Home> {
     onUpdateHistory();
   }
 
-  void onClearHistory() async {
-    await clearHistory();
-    onUpdateHistory();
+  Future<void> onClearHistory() async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Heads up!"),
+          content: Text("Are you sure to clear history?"),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Confirm"),
+              onPressed: () async {
+                await clearHistory();
+                onUpdateHistory();
+                Navigator.of(context).pop();
+              },
+            ),
+            MaterialButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }
