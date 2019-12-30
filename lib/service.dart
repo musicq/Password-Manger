@@ -25,12 +25,20 @@ Future<String> readPwd() async {
 String generate({int len = 8}) {
   String newPwd = '';
   final totalLen = legalChars.length;
+  // Record if new password contains all the necessary characters.
+  final containCharsSet = Set();
 
   while (newPwd.length < len) {
     final pi = Random().nextInt(totalLen);
+    containCharsSet.add(pi);
+
     final charSet = legalChars[pi];
     final ci = Random().nextInt(charSet.length);
     newPwd += charSet[ci];
+  }
+
+  if (containCharsSet.length < legalChars.length) {
+    return generate(len: len);
   }
 
   return newPwd;
