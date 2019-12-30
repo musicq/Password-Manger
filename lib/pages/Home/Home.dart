@@ -77,6 +77,11 @@ class _HomeState extends State<Home> {
     onUpdateHistory();
   }
 
+  void onDelete(int index) async {
+    await deleteItem(index);
+    onUpdateHistory();
+  }
+
   Future<void> onClearHistory() async {
     return showDialog<void>(
       context: context,
@@ -142,6 +147,7 @@ class _HomeState extends State<Home> {
               history: history,
               selectedIdx: selectedIdx,
               onTapTile: onTapTile,
+              onDelete: onDelete,
             ),
             Padding(
               padding: EdgeInsets.only(bottom: 40, top: 20),

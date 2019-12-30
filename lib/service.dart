@@ -16,7 +16,7 @@ Future<String> readPwd() async {
   pwd = await Storage.ins.readPwd();
 
   if (pwd == null) {
-    pwd = await generate();
+    pwd = generate();
   }
 
   return pwd;
@@ -51,5 +51,9 @@ Future<List<String>> readPwdHistory() async {
 }
 
 Future<File> clearHistory() async {
-  return await Storage.ins.clearHistory();
+  return Storage.ins.clearHistory();
+}
+
+Future<File> deleteItem(int index) async {
+  return Storage.ins.removeItemByIndex(index);
 }

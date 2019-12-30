@@ -4,8 +4,10 @@ class History extends StatelessWidget {
   final List<String> history;
   final int selectedIdx;
   final void Function(String content, int index) onTapTile;
+  final void Function(int index) onDelete;
 
-  History({Key key, this.history, this.selectedIdx, this.onTapTile})
+  History(
+      {Key key, this.history, this.selectedIdx, this.onTapTile, this.onDelete})
       : super(key: key);
 
   @override
@@ -35,16 +37,37 @@ class History extends StatelessWidget {
                       itemBuilder: (BuildContext context, int index) {
                         final content = history[index];
 
-                        return ListTile(
+                        return Dismissible(
                           key: Key(content),
-                          title: Text(content),
-                          onTap: () => onTapTile(content, index),
-                          trailing: selectedIdx != index
-                              ? null
-                              : Text(
-                                  'Copied',
-                                  style: TextStyle(color: Colors.green),
+                          child: ListTile(
+                            key: Key(content),
+                            title: Text(content),
+                            onTap: () => onTapTile(content, index),
+                            trailing: selectedIdx != index
+                                ? null
+                                : Text(
+                                    'Copied',
+                                    style: TextStyle(color: Colors.green),
+                                  ),
+                          ),
+                          onDismissed: (_) => onDelete(index),
+                          background: Container(
+                            color: Colors.red,
+                            child: Align(
+                              alignment: Alignment.centerRight,
+                              child: Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20),
+                                child: Text(
+                                  'Delete',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 18,
+                                  ),
                                 ),
+                              ),
+                            ),
+                          ),
+                          direction: DismissDirection.endToStart,
                         );
                       },
                     )

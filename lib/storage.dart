@@ -45,14 +45,24 @@ class Storage {
   }
 
   Future<File> writePwd(String pwd) async {
-    final file = await _localFile;
+    return writeFile(pwd + "\n", mode: FileMode.append);
+  }
 
-    return file.writeAsString(pwd + "\n", mode: FileMode.append);
+  Future<File> removeItemByIndex(int index) async {
+    final list = await readPwdHistory();
+    list.removeAt(list.length - 1 - index);
+
+    return writeFile(list.join("\n") + "\n");
   }
 
   Future<File> clearHistory() async {
+    return writeFile('');
+  }
+
+  Future<File> writeFile(String content,
+      {FileMode mode = FileMode.write}) async {
     final file = await _localFile;
 
-    return file.writeAsString('');
+    return file.writeAsString(content, mode: mode);
   }
 }
