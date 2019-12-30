@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:scb_pwd_mgr/service.dart';
+import 'package:scb_pwd_mgr/widgets/Display/Display.dart';
+import 'package:scb_pwd_mgr/widgets/History/History.dart';
 
 class Home extends StatefulWidget {
   Home({Key key}) : super(key: key);
@@ -22,115 +24,6 @@ class _HomeState extends State<Home> {
 
     readPwd().then((persistPwd) => setState(() => pwd = persistPwd));
     onUpdateHistory();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hasHistory = history.length != 0;
-
-    return Center(
-      child: Padding(
-        padding: EdgeInsets.only(top: 50),
-        child: Column(
-          children: <Widget>[
-            Padding(
-              padding: EdgeInsets.only(bottom: 40),
-              child: GestureDetector(
-                onTap: onCopy,
-                child: Tooltip(
-                  message: 'Tap to copy',
-                  child: Text(
-                    pwd,
-                    style: TextStyle(fontSize: 40),
-                  ),
-                ),
-              ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                RaisedButton(
-                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
-                  child: Text(
-                    'Generate',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
-                  ),
-                  color: Colors.green,
-                  onPressed: onRegenerate,
-                ),
-                MaterialButton(
-                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
-                  child: Text(
-                    'Record',
-                    style: TextStyle(color: Colors.green, fontSize: 20),
-                  ),
-                  onPressed: onRecord,
-                ),
-              ],
-            ),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(top: 40),
-                child: Column(
-                  children: <Widget>[
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Padding(
-                        padding: EdgeInsets.only(left: 22, bottom: 22),
-                        child: Text(
-                          'History',
-                          style: TextStyle(color: Colors.green, fontSize: 28),
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: hasHistory
-                          ? ListView.builder(
-                              padding: const EdgeInsets.all(8),
-                              itemCount: history.length,
-                              itemBuilder: (BuildContext context, int index) {
-                                final content = history[index];
-
-                                return ListTile(
-                                  key: Key(content),
-                                  title: Text(content),
-                                  onTap: () => onTapTile(content, index),
-                                  trailing: selectedIdx != index
-                                      ? null
-                                      : Text(
-                                          'Copied',
-                                          style: TextStyle(color: Colors.green),
-                                        ),
-                                );
-                              },
-                            )
-                          : Text(
-                              "History is empty...",
-                              style: TextStyle(color: Colors.grey),
-                            ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(bottom: 40, top: 20),
-              child: hasHistory
-                  ? MaterialButton(
-                      padding:
-                          EdgeInsets.symmetric(vertical: 20, horizontal: 40),
-                      child: Text(
-                        'Clear History',
-                        style: TextStyle(color: Colors.red),
-                      ),
-                      onPressed: onClearHistory,
-                    )
-                  : null,
-            )
-          ],
-        ),
-      ),
-    );
   }
 
   onRegenerate() async {
@@ -170,7 +63,17 @@ class _HomeState extends State<Home> {
   }
 
   void onRecord() async {
-    await record(pwd);
+    final res = await record(pwd);
+
+    if (res == null) {
+      Scaffold.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Alread recored!'),
+          duration: Duration(milliseconds: 1000),
+        ),
+      );
+    }
+
     onUpdateHistory();
   }
 
@@ -200,6 +103,63 @@ class _HomeState extends State<Home> {
           ],
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final hasHistory = history.length != 0;
+
+    return Center(
+      child: Padding(
+        padding: EdgeInsets.only(top: 50),
+        child: Column(
+          children: <Widget>[
+            Display(content: pwd, onTap: onCopy),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: <Widget>[
+                RaisedButton(
+                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                  child: Text(
+                    'Generate',
+                    style: TextStyle(color: Colors.white, fontSize: 20),
+                  ),
+                  color: Colors.green,
+                  onPressed: onRegenerate,
+                ),
+                MaterialButton(
+                  padding: EdgeInsets.symmetric(vertical: 15, horizontal: 40),
+                  child: Text(
+                    'Record',
+                    style: TextStyle(color: Colors.green, fontSize: 20),
+                  ),
+                  onPressed: onRecord,
+                ),
+              ],
+            ),
+            History(
+              history: history,
+              selectedIdx: selectedIdx,
+              onTapTile: onTapTile,
+            ),
+            Padding(
+              padding: EdgeInsets.only(bottom: 40, top: 20),
+              child: hasHistory
+                  ? MaterialButton(
+                      padding:
+                          EdgeInsets.symmetric(vertical: 20, horizontal: 40),
+                      child: Text(
+                        'Clear History',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                      onPressed: onClearHistory,
+                    )
+                  : null,
+            )
+          ],
+        ),
+      ),
     );
   }
 }
