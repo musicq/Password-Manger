@@ -14,9 +14,12 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  final GlobalKey<AnimatedListState> _listKey = GlobalKey<AnimatedListState>();
   String pwd = '';
   List<String> history = [];
   int selectedIdx = -1;
+
+  Timer _timer;
 
   @override
   void initState() {
@@ -26,7 +29,9 @@ class _HomeState extends State<Home> {
     onUpdateHistory();
   }
 
-  onRegenerate() async {
+  AnimatedListState get _animatedList => _listKey.currentState;
+
+  void onRegenerate() async {
     final newPwd = generate();
 
     setState(() => pwd = newPwd);
@@ -34,17 +39,22 @@ class _HomeState extends State<Home> {
     onUpdateHistory();
   }
 
-  void onUpdateHistory() async {
+  Future<void> onUpdateHistory() async {
     final _h = await readPwdHistory();
 
     setState(() => history = _h);
   }
 
   void onTapTile(String content, int index) {
+    if (_timer != null) {
+      _timer.cancel();
+    }
+
     onCopy(content: content);
 
     setState(() => selectedIdx = index);
-    Timer(Duration(milliseconds: 1300), () {
+
+    _timer = Timer(Duration(milliseconds: 1300), () {
       setState(() => selectedIdx = -1);
     });
   }
@@ -52,34 +62,41 @@ class _HomeState extends State<Home> {
   void onCopy({String content}) {
     Clipboard.setData(ClipboardData(text: content ?? pwd));
 
-    Scaffold.of(context).showSnackBar(SnackBar(
-      content: Text(
-        "Password has been copied!",
-        style: TextStyle(color: Colors.white),
+    Scaffold.of(context).hideCurrentSnackBar();
+    Scaffold.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          "Password has been copied!",
+          style: TextStyle(color: Colors.white),
+        ),
+        duration: Duration(milliseconds: 1000),
+        backgroundColor: Colors.green,
       ),
-      duration: Duration(milliseconds: 1000),
-      backgroundColor: Colors.green,
-    ));
+    );
   }
 
   void onRecord() async {
     final res = await record(pwd);
 
     if (res == null) {
+      Scaffold.of(context).hideCurrentSnackBar();
       Scaffold.of(context).showSnackBar(
         SnackBar(
           content: Text('Alread recored!'),
           duration: Duration(milliseconds: 1000),
         ),
       );
+
+      return;
     }
 
-    onUpdateHistory();
+    await onUpdateHistory();
+    _animatedList.insertItem(0);
   }
 
-  void onDelete(int index) async {
+  Future<void> onDelete(int index) async {
     await deleteItem(index);
-    onUpdateHistory();
+    await onUpdateHistory();
   }
 
   Future<void> onClearHistory() async {
@@ -144,6 +161,7 @@ class _HomeState extends State<Home> {
               ],
             ),
             History(
+              listKey: _listKey,
               history: history,
               selectedIdx: selectedIdx,
               onTapTile: onTapTile,
